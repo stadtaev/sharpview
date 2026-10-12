@@ -22,8 +22,19 @@ The initial increment uses the existing production projects and a shared xUnit t
 | Generated exclusion and evidence | `Generated_exclusion_has_explicit_evidence` |
 | SDK .csproj/.sln/.slnx loading and framework selection | `Project_input_includes_source_references_and_cross_project_bindings`, `Conventional_solution_input_preserves_cross_project_source_facts`, `Framework_selection_uses_conditional_assets_and_rejects_ambiguity`, research fixture loading |
 | No implicit restore, source preservation and output safeguard | `Missing_restoration_is_rejected_without_creating_assets_or_changing_source`, `Output_refuses_to_overwrite_an_input_file` |
+| Implementation candidates, field/property dependencies | `Implementation_candidates_cover_interfaces_overrides_and_accessors`, `Field_and_property_dependencies_carry_kind_and_declaration_evidence_without_backing_fields`, `Interface_dispatch_has_a_declared_member_and_implementation_facts_are_candidates_only` |
+| Lambda/local-function identity (no collapsed bodies) | Task 11 extraction tests in `ExtractionTests` |
+| Program index lookups and ordering | `IndexTests` |
+| Reason codes consistent with statuses | `Every_fixture_witness_has_a_reason_code_consistent_with_its_final_status`, reason assertions in `CoreTests` |
+| Layer precedence, graph edges, allowed-dependency rule, `layers` CLI | `ArchitectureTests`, `Layer_overview_aggregates_paths_and_evaluates_allowed_dependencies`, `Invalid_layer_requests_fail_before_loading` |
+| Reachability, boundaries, candidates, `reach` CLI | `ReachabilityTests`, `Reach_lists_each_callable_once_with_a_shortest_witness` |
+| Controller classification in Core | `ConventionTests`, `Core_controller_classification_matches_extraction_on_edge_cases` |
 | Argument failures before loading, IDs and deterministic JSON | `Invalid_options_fail_before_loading`, `Snapshot_ids_round_trip_and_json_is_deterministic` |
 
 Reproduce with `dotnet build tests/Fixtures/ResearchSolution/ResearchSolution.slnx`, `dotnet build sharpview.slnx --no-incremental`, and `dotnet test sharpview.slnx`. Reports are in `docs/samples`.
 
-The self-analysis smoke check loaded Sharpview's four projects and exported 834 callable facts, 2,649 call sites, 32 throw sites and four catches with 93 explicitly recorded gaps. This checks loading/extraction on the host's own code; it does not replace an external Web API experiment.
+The self-analysis smoke check (on the frozen pre-refactor source) loaded Sharpview's four projects and exported 953 callable facts, 2,870 call sites, 32 throw sites, four catches, 22 implementation candidates and 93 explicitly recorded gaps; before the lambda/local-function identity fix it reported 834 callables and 2,649 call sites because same-shaped lambda bodies collapsed into one fact. This checks loading/extraction on the host's own code; it does not replace an external Web API experiment.
+
+## Regression comparison (consumer model increment)
+
+Every task of the consumer-model plan was compared against a frozen baseline (the pre-refactor commit, built separately): 13 CLI runs covering `controllers`, `exceptions`, `chains` (declared and direct), `methods`, `inspect` (text and JSON) on the fixture, and `inspect`/`chains`/`methods`/JSON on a frozen copy of Sharpview's own source. Final result: every fixture text report is byte-identical to the baseline. Intended differences only: JSON schema 3 (string IDs, new facts, `controllerActions` computed instead of stored); self-analysis counts grew because overridden members are registered (+8 callables), lambda/local bodies are no longer collapsed (+103 bodies) and field/property dependencies were added. Old-vs-new runs with a `namespace:<TypeName>` mapping equal new runs with `type:<TypeName>`.
