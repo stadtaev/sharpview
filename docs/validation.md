@@ -30,6 +30,8 @@ The initial increment uses the existing production projects and a shared xUnit t
 | Reachability, boundaries, candidates, `reach` CLI | `ReachabilityTests`, `Reach_lists_each_callable_once_with_a_shortest_witness` |
 | Controller classification in Core | `ConventionTests`, `Core_controller_classification_matches_extraction_on_edge_cases` |
 | Argument failures before loading, IDs and deterministic JSON | `Invalid_options_fail_before_loading`, `Snapshot_ids_round_trip_and_json_is_deterministic` |
+| Offline schema-3 loading and query execution | `Schema_three_document_supports_offline_reachability`, `Snapshot_ids_round_trip_and_json_is_deterministic` (reads actual CLI output through Core) |
+| Versioned export, envelope validation, cancellation and stream ownership | `Writer_preserves_schema_three_envelope_and_string_ids`, `Unsupported_schema_is_rejected_before_payload_deserialization`, `Invalid_envelope_is_rejected`, `Cancellation_is_honored_without_closing_streams` |
 
 Reproduce with `dotnet build tests/Fixtures/ResearchSolution/ResearchSolution.slnx`, `dotnet build sharpview.slnx --no-incremental`, and `dotnet test sharpview.slnx`. Reports are in `docs/samples`.
 
@@ -38,3 +40,29 @@ The self-analysis smoke check (on the frozen pre-refactor source) loaded Sharpvi
 ## Regression comparison (consumer model increment)
 
 Every task of the consumer-model plan was compared against a frozen baseline (the pre-refactor commit, built separately): 13 CLI runs covering `controllers`, `exceptions`, `chains` (declared and direct), `methods`, `inspect` (text and JSON) on the fixture, and `inspect`/`chains`/`methods`/JSON on a frozen copy of Sharpview's own source. Final result: every fixture text report is byte-identical to the baseline. Intended differences only: JSON schema 3 (string IDs, new facts, `controllerActions` computed instead of stored); self-analysis counts grew because overridden members are registered (+8 callables), lambda/local bodies are no longer collapsed (+103 bodies) and field/property dependencies were added. Old-vs-new runs with a `namespace:<TypeName>` mapping equal new runs with `type:<TypeName>`.
+
+## External Web API attempt (2026-10-17)
+
+Input: the locally supplied `api-osa.zip`, extracted into a temporary directory outside this repository, excluding
+Git metadata and existing build outputs. The archive and its source files were not modified. No external source or
+package-feed credentials are included in this repository.
+
+Source inventory (not Sharpview analysis results): 13 source projects, 355 C# source files, and 12 files named
+`*Controller.cs`, including a base controller. This is a useful validation target for cross-project call relationships
+and interface boundaries.
+
+Attempted prerequisite:
+
+```sh
+dotnet restore src/dunnhumby.Osa.Api/dunnhumby.Osa.Api.csproj --disable-parallel
+```
+
+The configured Artifactory source returned `NU1301` / HTTP 404 for package lookups. The restore was bounded to 50 seconds.
+The API also references private packages, so replacing the feed with nuget.org would not establish a faithful build.
+No semantic analysis accuracy, coverage percentages, or performance conclusions can be claimed from this attempt.
+
+To finish: supply a working package-source configuration or a restored checkout, run `inspect --format json`, `reach`
+(both with and without `--follow-candidates`), `exceptions`, and `layers` on the API project. Record extraction gaps,
+dispatch/missing-body boundaries, limit flags, and exception reason counts. Check representative controller-to-service
+paths and exception witnesses against source before judging the reports useful. Keep raw reports outside the repository
+unless the application's source identifiers are intended for publication.
