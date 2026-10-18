@@ -61,7 +61,7 @@ The configured Artifactory source returned `NU1301` / HTTP 404 for package looku
 The API also references private packages, so replacing the feed with nuget.org would not establish a faithful build.
 No semantic analysis accuracy, coverage percentages, or performance conclusions can be claimed from this attempt.
 
-To finish: supply a working package-source configuration or a restored checkout, run `inspect --format json`, `reach`
+To finish: supply a working package-source configuration or a restored checkout, run `inspect --json`, `reach`
 (both with and without `--follow-candidates`), `exceptions`, and `layers` on the API project. Record extraction gaps,
 dispatch/missing-body boundaries, limit flags, and exception reason counts. Check representative controller-to-service
 paths and exception witnesses against source before judging the reports useful. Keep raw reports outside the repository
